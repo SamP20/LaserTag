@@ -30,16 +30,19 @@ void ir_init(void)
     TCCR1A = _BV(COM1A1); // Clear OC1A on compare match
 
     //TCCR1B = _BV(CS11) | _BV(CS10); // 2.5MhZ clock
-    //TCCR1B = _BV(CS11) | _BV(CS10); // 312.5 kHz clock <--- USE THIS!!
+    //TCCR1B = _BV(CS11) | _BV(CS10); // 312.5 kHz clock
     //TCCR1B = _BV(CS12);
     //TCCR1B = _BV(CS12) | _BV(CS10); // 19.53kHz clock
-    TCCR1B = _BV(CS12) | _BV(CS11) | _BV(CS10); // External 56kHz clock
+
+    // External 56kHz clock on T1 (PD5).
+    TCCR1B = _BV(CS12) | _BV(CS11) | _BV(CS10);
 
     TIMSK1 = _BV(ICIE1); // Enable input capture
     ir_listen_reset();
     sei();
 
-    // Generate 56kHz carrier
+    // Generate 56kHz carrier on OCOB (PD5). This is connected internally to
+    // the T1 clock input.
     OCR0A = 178;
     TCCR0A = _BV(WGM01) | _BV(COM0B0);
     TCCR0B = _BV(CS00);
@@ -98,14 +101,13 @@ ISR(TIMER1_COMPA_vect)
     switch (out_state) {
 
         // Triggered on header start
-        case IR_SILENCE:
+    case IR_SILENCE:
         ir_send_off(); // Next output shall be low
         out_state = IR_HEADER_HIGH;
         OCR1A += IR_HEADER_TICKS;
-        break;
+    break;
 
-
-        case IR_BIT_HIGH: // Triggered on end of bit pulse
+    case IR_BIT_HIGH: // Triggered on end of bit pulse
         out_bit++;
         // FALLTHROUGH
         case IR_HEADER_HIGH: // Triggered on end of header pulse
@@ -120,19 +122,17 @@ ISR(TIMER1_COMPA_vect)
             out_state = IR_BIT_LOW;
             OCR1A += IR_SPACE_TICKS;
         }
-        break;
+    break;
 
-
-        case IR_BIT_LOW: // Triggered on start of bit pulse
+    case IR_BIT_LOW: // Triggered on start of bit pulse
         ir_send_off(); // Next output shall be low
         out_state = IR_BIT_HIGH;
         OCR1A += (out_buffer[out_bit>>3] & _BV(out_bit & 0x07))? IR_ONE_TICKS : IR_ZERO_TICKS;
-        break;
+    break;
 
-
-        case IR_DONE: // Triggered when message send has finished
-            TIMSK1 &= ~_BV(OCIE1A); // Disable COMPA interrupt
-        break;
+    case IR_DONE: // Triggered when message send has finished
+        TIMSK1 &= ~_BV(OCIE1A); // Disable COMPA interrupt
+    break;
     }
 }
 
