@@ -100,17 +100,19 @@ ISR(TIMER1_COMPA_vect)
 {
     switch (out_state) {
 
-        // Triggered on header start
+    // Triggered on header start
     case IR_SILENCE:
         ir_send_off(); // Next output shall be low
         out_state = IR_HEADER_HIGH;
         OCR1A += IR_HEADER_TICKS;
     break;
 
-    case IR_BIT_HIGH: // Triggered on end of bit pulse
+    // Triggered on end of bit pulse
+    case IR_BIT_HIGH:
         out_bit++;
-        // FALLTHROUGH
-        case IR_HEADER_HIGH: // Triggered on end of header pulse
+    // FALLTHROUGH
+    // Triggered on end of header pulse
+    case IR_HEADER_HIGH:
         if(out_bit >= out_total_bits)
         {
             out_state = IR_DONE;
@@ -124,13 +126,15 @@ ISR(TIMER1_COMPA_vect)
         }
     break;
 
-    case IR_BIT_LOW: // Triggered on start of bit pulse
+    // Triggered on start of bit pulse
+    case IR_BIT_LOW:
         ir_send_off(); // Next output shall be low
         out_state = IR_BIT_HIGH;
         OCR1A += (out_buffer[out_bit>>3] & _BV(out_bit & 0x07))? IR_ONE_TICKS : IR_ZERO_TICKS;
     break;
 
-    case IR_DONE: // Triggered when message send has finished
+    // Triggered when message send has finished
+    case IR_DONE:
         TIMSK1 &= ~_BV(OCIE1A); // Disable COMPA interrupt
     break;
     }
@@ -203,14 +207,14 @@ ISR(TIMER1_CAPT_vect)
     // in_state represents the previous state before the interrupt
     switch (in_state) {
 
-        // Triggered on header start
-        case IR_SILENCE:
+    // Triggered on header start
+    case IR_SILENCE:
         ir_capt_off();
         in_state = IR_HEADER_HIGH;
-        break;
+    break;
 
-        // Triggered on end of header pulse
-        case IR_HEADER_HIGH:
+    // Triggered on end of header pulse
+    case IR_HEADER_HIGH:
         if(delta < IR_HEADER_TICKS-IR_HEADER_TOLERANCE)
         {
             ir_listen_reset();
@@ -222,10 +226,10 @@ ISR(TIMER1_CAPT_vect)
         TIMSK1 |= _BV(OCIE1B); // Enable end of message timer
         ir_capt_on();
         in_state = IR_BIT_LOW;
-        break;
+    break;
 
-        // Triggered on start of bit pulse
-        case IR_BIT_LOW:
+    // Triggered on start of bit pulse
+    case IR_BIT_LOW:
         ir_timeout_rst();
         if(delta < IR_SPACE_TICKS-IR_TOLERANCE || delta > IR_SPACE_TICKS+IR_TOLERANCE)
         {
@@ -235,10 +239,10 @@ ISR(TIMER1_CAPT_vect)
 
         ir_capt_off();
         in_state = IR_BIT_HIGH;
-        break;
+    break;
 
-        // Triggered on end of bit pulse
-        case IR_BIT_HIGH:
+    // Triggered on end of bit pulse
+    case IR_BIT_HIGH:
         ir_timeout_rst();
         if(delta < IR_ZERO_TICKS-IR_TOLERANCE || delta > IR_ONE_TICKS+IR_TOLERANCE)
         {
@@ -265,6 +269,6 @@ ISR(TIMER1_CAPT_vect)
 
         ir_capt_on();
         in_state = IR_BIT_LOW;
-        break;
+    break;
     }
 }
