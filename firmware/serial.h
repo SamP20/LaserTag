@@ -14,7 +14,9 @@
 #define UART_BUF_LEN (1<<UART_BUF_POWER)
 #define UART_BUF_MASK (UART_BUF_LEN-1)
 
+// Initialize the UART subsystem
 void uart_init(uint8_t enabled);
+// Return the number of bytes available to read.
 uint8_t uart_available(void);
 
 int uart_putchar(char var, FILE *stream);

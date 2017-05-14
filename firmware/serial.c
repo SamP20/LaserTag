@@ -28,6 +28,7 @@ uint8_t uart_available(void)
 
 int uart_putchar(char var, FILE *stream)
 {
+    // Block until write buffer has space.
     while(uart_tx_len>=UART_BUF_LEN);
     uart_tx_buf[uart_tx_write_ptr++] = (uint8_t)var;
     uart_tx_write_ptr &= UART_BUF_MASK;
