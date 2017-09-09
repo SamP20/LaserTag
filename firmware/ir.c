@@ -65,25 +65,6 @@ void ir_send(uint8_t* data, uint8_t bits)
     TIFR1 |= _BV(OCF1A); // Clear interrupt flag before enabling.
     TIMSK1 |= _BV(OCIE1A); // Enable Compare A interrupt
 
-    /*PORTB |= _BV(PB1);
-    _delay_us(2400);
-    PORTB &= ~_BV(PB1);
-
-    for(uint8_t b=0;b<bits;b++)
-    {
-        _delay_us(600);
-        PORTB |= _BV(PB1);
-        if(data[b>>3] & _BV(b & 0x07))
-        {
-            _delay_us(1200);
-        }
-        else
-        {
-            _delay_us(600);
-        }
-        PORTB &= ~_BV(PB1);
-    }
-    _delay_us(9600);*/
 }
 
 static inline void ir_send_on(void)
@@ -151,13 +132,11 @@ static volatile uint8_t in_state = IR_SILENCE;
 static inline void ir_capt_off(void)
 {
     TCCR1B |= _BV(ICES1); // Next capture on rising edge (IR off)
-    //TCCR1B &= ~_BV(ICES1);
 }
 
 static inline void ir_capt_on(void)
 {
     TCCR1B &= ~_BV(ICES1); // Next capture on falling edge (IR on)
-    //TCCR1B |= _BV(ICES1);
 }
 
 // Bad message. Reset back to default listening state
